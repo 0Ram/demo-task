@@ -1,9 +1,9 @@
 "use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { Sparkles } from "lucide-react";
 
 export function TaskGenerator() {
   const [topic, setTopic] = useState("");
@@ -14,41 +14,26 @@ export function TaskGenerator() {
   const generateTasks = async () => {
     if (!topic.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a topic",
+        title: "Please enter a topic",
+        variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
     try {
-      console.log("Sending request with topic:", topic); // Debug log 1
-
       const response = await fetch("/api/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic }),
       });
-
-      console.log("API Response Status:", response.status); // Debug log 2
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error Response:", errorText); // Debug log 3
-        throw new Error(`Failed to generate tasks: ${errorText}`);
-      }
-
+      
       const data = await response.json();
-      console.log("API Response Data:", data); // Debug log 4
-
       setGeneratedTasks(data.tasks || []);
     } catch (error) {
-      console.error("Generation Error:", error); // Debug log 5
       toast({
-        title: "Error",
-        description: "Failed to generate tasks",
+        title: "Generation failed",
+        description: "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -57,24 +42,51 @@ export function TaskGenerator() {
   };
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg">
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Generate Learning Tasks
+        </h2>
+        <p className="text-sm text-gray-600">
+          Enter any topic you want to learn
+        </p>
+      </div>
+
       <div className="flex gap-2">
         <Input
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="Enter a topic (e.g. Learn Next.js)"
+          placeholder="e.g. Learn C, Study React, Master Python"
+          className="flex-1"
         />
         <Button onClick={generateTasks} disabled={isLoading}>
-          {isLoading ? "Generating..." : "Generate Tasks"}
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              </svg>
+              Generating...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Generate
+            </span>
+          )}
         </Button>
       </div>
 
       {generatedTasks.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-medium">Generated Tasks:</h3>
-          <ul className="list-disc pl-5 space-y-1">
-            {generatedTasks.map((task, index) => (
-              <li key={index}>{task}</li>
+        <div className="space-y-4">
+          <h3 className="font-medium text-gray-700">Suggested Tasks</h3>
+          <ul className="space-y-3">
+            {generatedTasks.map((task, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100"
+              >
+                <span className="flex-1 text-gray-800">{task}</span>
+              </li>
             ))}
           </ul>
         </div>
